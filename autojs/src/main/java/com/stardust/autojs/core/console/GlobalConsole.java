@@ -18,8 +18,8 @@ import java.util.Locale;
 
 public class GlobalConsole extends ConsoleImpl {
     public static WsManager LOG_WS_MANAGER = null;
-    public static String IP_DEFAUT = "boot-stg-api.huiliu365.cn";
-    //public static String IP_DEFAUT = "data-boot-api.huiliu365.com";
+    //public static String IP_DEFAUT = "boot-stg-api.huiliu365.cn";
+    public static String IP_DEFAUT = "data-boot-api.huiliu365.com";
     //public static String IP_DEFAUT = "ws-api.tecad.cn";
 
     public static String DEVICE_ID = "";
@@ -37,7 +37,7 @@ public class GlobalConsole extends ConsoleImpl {
 
     static {
         Date now = new Date();
-        SimpleDateFormat sdf = new SimpleDateFormat("YYYY_MM_dd_mm_ss");
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy_MM_dd_hh_mm_ss");
         GlobalConsole.DEVICE_ID = sdf.format(now);
     }
 
