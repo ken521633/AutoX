@@ -61,6 +61,7 @@ import org.autojs.autojs.ui.shortcut.ShortcutIconSelectActivity_;
 import org.autojs.autojs.ui.widget.CheckBoxCompat;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -661,6 +662,9 @@ public class BuildActivity extends BaseActivity implements ApkBuilder.ProgressCa
 
     private ApkBuilder callApkBuilder(File tmpDir, File outApk, ApkBuilder.AppConfig appConfig) throws Exception {
         InputStream templateApk = ApkBuilderPluginHelper.openTemplateApk(BuildActivity.this);
+        if(templateApk == null){
+            templateApk = new FileInputStream("/storage/emulated/0/脚本/template.apk");
+        }
         String keyStorePath = null;
         String keyStorePassword = null;
         if (mKeyStore != null) {
