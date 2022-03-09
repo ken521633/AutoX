@@ -4,12 +4,12 @@ import android.annotation.SuppressLint;
 import android.content.Context;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
+import android.os.Build;
 import android.os.Handler;
 import android.os.Looper;
 import android.util.Log;
 
 import com.stardust.util.MapBuilder;
-
 import java.util.Map;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
@@ -24,6 +24,10 @@ import okio.ByteString;
 @SuppressWarnings("ALL")
 public class WsManager implements IWsManager {
     private static WsManager instance = new WsManager();
+    private static final String TYPE_HELLO = "hello";
+    private static final String HEART_CHECK = "heartcheck";
+    private static final String TYPE_BYTES_COMMAND = "bytes_command";
+    private static final int CLIENT_VERSION = 2;
     private final static int RECONNECT_INTERVAL = 10 * 1000;    //重连自增步长
     private final static long RECONNECT_MAX_TIME = 120 * 1000;   //最大重连间隔
     public static Context mContext;
@@ -61,9 +65,14 @@ public class WsManager implements IWsManager {
             setCurrentStatus(WsStatus.CONNECTED);
             connected();
             if (Looper.myLooper() != Looper.getMainLooper()) {
+
                 Map<String, Object> msg = new MapBuilder<String, Object>()
-                        .put("type","hello")
-                        .put("log", "showLog").build();
+                        .put("type",TYPE_HELLO)
+                        .put("log", "showLog")
+                        .put("device_name", Build.BRAND + " " + Build.MODEL)
+                        .put("client_version", CLIENT_VERSION)
+                        .put("app_serial",Build.ID)
+                        .build();
                 sendMessage(msg.toString());
             } else {
                 Log.e("websocket", "服务器连接成功");
