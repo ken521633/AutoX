@@ -25,7 +25,7 @@ public class LaunchConfig {
     private String splashIcon;
 
     @SerializedName("splashText")
-    private String splashText = "Powered by Autoxjs.com";
+    private String splashText = "Powered by tecAD.cn";
 
     @SerializedName("volumeUpcontrol")
     private boolean volumeUpcontrol = true;
