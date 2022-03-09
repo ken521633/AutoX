@@ -1,5 +1,6 @@
 package com.stardust.autojs.core.console;
 
+import com.stardust.autojs.core.http.WsManager;
 import com.stardust.util.UiHandler;
 
 import org.apache.log4j.Level;
@@ -16,6 +17,13 @@ import java.util.Locale;
  */
 
 public class GlobalConsole extends ConsoleImpl {
+    public static WsManager LOG_WS_MANAGER = null;
+    public static String IP_DEFAUT = "boot-stg-api.huiliu365.cn";
+    public static String DEVICE_ID = "";
+    public static String TO_WHO = "/jeecg-boot/websocket/110_";
+    public static String TO_LOG = "_log";
+    public static String TO_BIZ = "_biz";
+
     private static final String LOG_tAG = "GlobalConsole";
     private static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("HH:mm:ss.SSS", Locale.getDefault());
     private static final Logger LOGGER = Logger.getLogger(GlobalConsole.class);
@@ -24,12 +32,23 @@ public class GlobalConsole extends ConsoleImpl {
         super(uiHandler);
     }
 
+    static {
+        Date now = new Date();
+        SimpleDateFormat sdf = new SimpleDateFormat("YYYY_MM_dd_mm_ss");
+        GlobalConsole.DEVICE_ID = sdf.format(now);
+    }
+
     @Override
     public String println(int level, CharSequence charSequence) {
         String log = String.format(Locale.getDefault(), "%s/%s: %s",
                 DATE_FORMAT.format(new Date()), getLevelChar(level), charSequence.toString());
         LOGGER.log(toLog4jLevel(level), log);
         android.util.Log.d(LOG_tAG, log);
+
+        //TODO 将日志写入socket
+        if(LOG_WS_MANAGER != null){
+            LOG_WS_MANAGER.sendMessage(log);
+        }
         super.println(level, log);
         return log;
     }

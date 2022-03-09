@@ -34,12 +34,16 @@ import com.bumptech.glide.request.target.SimpleTarget;
 import com.bumptech.glide.request.transition.Transition;
 import com.stardust.app.AppOpsKt;
 import com.stardust.app.GlobalAppContext;
+import com.stardust.autojs.core.console.GlobalConsole;
+import com.stardust.autojs.core.http.WsManager;
 import com.stardust.notification.NotificationListenerService;
 
 import org.autojs.autojs.Pref;
 import org.autojs.autojs.R;
 import org.autojs.autojs.external.foreground.ForegroundService;
 import org.autojs.autojs.network.UserService;
+import org.autojs.autojs.pluginclient.WSBiz;
+import org.autojs.autojs.pluginclient.WSPluginService;
 import org.autojs.autojs.tool.Observers;
 import org.autojs.autojs.ui.BaseActivity;
 import org.autojs.autojs.ui.common.NotAskAgainDialog;
@@ -84,11 +88,13 @@ import org.greenrobot.eventbus.ThreadMode;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Random;
+import java.util.concurrent.TimeUnit;
 
 import io.reactivex.Observable;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.Disposable;
 import io.reactivex.schedulers.Schedulers;
+import okhttp3.OkHttpClient;
 
 import static android.content.Context.TELEPHONY_SERVICE;
 
@@ -97,9 +103,10 @@ import static android.content.Context.TELEPHONY_SERVICE;
  * Created by Stardust on 2017/1/30.
  * TODO these codes are so ugly!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
  */
+@SuppressWarnings("ALL")
 @EFragment(R.layout.fragment_drawer)
 public class DrawerFragment extends androidx.fragment.app.Fragment {
-
+    public static boolean WS_CHECKED = false;
     private static final String URL_DEV_PLUGIN = "https://github.com/kkevsekk1/Auto.js-VSCode-Extension";
 
     @ViewById(R.id.header)
@@ -117,6 +124,7 @@ public class DrawerFragment extends androidx.fragment.app.Fragment {
 
 
     private DrawerMenuItem mConnectionItem = new DrawerMenuItem(R.drawable.ic_connect_to_pc, R.string.debug, 0, this::connectOrDisconnectToRemote);
+    private DrawerMenuItem mWSItem = new DrawerMenuItem(R.drawable.ic_connect_to_pc,R.string.regist, 0, this::connectOrDisconnectToWS);
     private DrawerMenuItem mAccessibilityServiceItem = new DrawerMenuItem(R.drawable.ic_service_green, R.string.text_accessibility_service, 0, this::enableOrDisableAccessibilityService);
     private DrawerMenuItem mStableModeItem = new DrawerMenuItem(R.drawable.ic_stable, R.string.text_stable_mode, R.string.key_stable_mode, null) {
         @Override
@@ -187,8 +195,9 @@ public class DrawerFragment extends androidx.fragment.app.Fragment {
                 new DrawerMenuItem(R.drawable.ic_backup_black_48dp, R.string.text_auto_back, R.string.key_auto_back, null),
 
                 new DrawerMenuGroup(R.string.text_others),
-                new DrawerMenuItem(R.drawable.ic_personalize, R.string.regist, this::regist),
+                //new DrawerMenuItem(R.drawable.ic_personalize, R.string.regist, this::regist),
                 mConnectionItem,
+                mWSItem,
                 new DrawerMenuItem(R.drawable.ic_personalize, R.string.text_theme_color, this::openThemeColorSettings),
 
                // new DrawerMenuItem(R.drawable.ic_night_mode, R.string.text_night_mode, R.string.key_night_mode, this::toggleNightMode),
@@ -309,6 +318,73 @@ public class DrawerFragment extends androidx.fragment.app.Fragment {
         } else if (!checked && connected) {
             DevPluginService.getInstance().disconnectIfNeeded();
         }
+    }
+
+    void connectOrDisconnectToWS(DrawerMenuItemViewHolder holder) {
+        WS_CHECKED = holder.getSwitchCompat().isChecked();
+        boolean connected = false;
+        if(WSBiz.BIZ_WS!=null){
+            connected = WSBiz.BIZ_WS.isWsConnected();
+        }
+        if (WS_CHECKED && !connected) {
+
+            inputWSHost();
+
+            try{
+                //监听日志
+                GlobalConsole.LOG_WS_MANAGER = new WsManager.Builder(GlobalAppContext.get()).client(
+                        new OkHttpClient().newBuilder()
+                                .pingInterval(15, TimeUnit.SECONDS)
+                                .retryOnConnectionFailure(true)
+                                .build())
+                        .needReconnect(true)
+                        .wsUrl("ws://"+GlobalConsole.IP_DEFAUT+GlobalConsole.TO_WHO+GlobalConsole.DEVICE_ID+GlobalConsole.TO_LOG)
+                        .build();
+                //开启 连接
+                GlobalConsole.LOG_WS_MANAGER.startConnect();
+            }catch (Exception e){
+                e.printStackTrace();
+            }
+        } else if (!WS_CHECKED && connected) {
+            if(GlobalConsole.LOG_WS_MANAGER != null){
+                GlobalConsole.LOG_WS_MANAGER.stopConnect();
+            }
+            if(WSBiz.BIZ_WS != null){
+                WSBiz.BIZ_WS.stopConnect();
+            }
+
+        }
+    }
+
+    private void inputWSHost() {
+        String host = Pref.getServerAddressOrDefault(WifiTool.getRouterIp(getActivity()));
+        new MaterialDialog.Builder(getActivity())
+                .title(R.string.text_server_address)
+                .input("", host, (dialog, input) -> {
+                    Pref.saveServerAddress(input.toString());
+                    WSBiz.BIZ_WS = new WSBiz.Builder(GlobalAppContext.get()).client(
+                            new OkHttpClient().newBuilder()
+                                    .pingInterval(15, TimeUnit.SECONDS)
+                                    .retryOnConnectionFailure(true)
+                                    .build())
+                            .needReconnect(true)
+                            .wsUrl("ws://" + GlobalConsole.IP_DEFAUT + GlobalConsole.TO_WHO + GlobalConsole.DEVICE_ID + GlobalConsole.TO_BIZ)
+                            .build();
+                    if(WSBiz.BIZ_WS != null){
+                        //开启 连接
+                        WSBiz.BIZ_WS.startConnect();
+                    }
+                })
+                .neutralText(R.string.text_help)
+                .onNeutral((dialog, which) -> {
+                    setChecked(mWSItem, false);
+                    IntentUtil.browse(getActivity(), URL_DEV_PLUGIN);
+                    if(WSBiz.BIZ_WS != null){
+                        WSBiz.BIZ_WS.stopConnect();
+                    }
+                })
+                .cancelListener(dialog -> setChecked(mWSItem, false))
+                .show();
     }
 
     void regist(DrawerMenuItemViewHolder holder) {
