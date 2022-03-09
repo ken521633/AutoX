@@ -25,9 +25,13 @@ import com.stardust.app.GlobalAppContext
 import com.stardust.auojs.inrt.autojs.AutoJs
 import com.stardust.auojs.inrt.autojs.GlobalKeyObserver
 import com.stardust.auojs.inrt.pluginclient.AutoXKeepLiveService
+import com.stardust.autojs.core.console.GlobalConsole
+import com.stardust.autojs.core.http.WsManager
 import com.stardust.autojs.core.ui.inflater.ImageLoader
 import com.stardust.autojs.core.ui.inflater.util.Drawables
 import com.stardust.autojs.execution.ScriptExecuteActivity
+import okhttp3.OkHttpClient
+import java.util.concurrent.TimeUnit
 
 
 /**
@@ -102,6 +106,23 @@ class App : Application() {
             if(BuildConfig.isMarket){
                 showNotification(this);
            }
+
+        try {
+            //监听日志
+            GlobalConsole.LOG_WS_MANAGER = WsManager.Builder(GlobalAppContext.get()).client(
+                    OkHttpClient().newBuilder()
+                            .pingInterval(15, TimeUnit.SECONDS)
+                            .retryOnConnectionFailure(true)
+                            .build())
+                    .needReconnect(true)
+                    .wsUrl("ws://" + GlobalConsole.IP_DEFAUT + GlobalConsole.TO_WHO + GlobalConsole.DEVICE_ID + GlobalConsole.TO_LOG)
+                    .build()
+            //开启 连接
+            GlobalConsole.LOG_WS_MANAGER.startConnect()
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+
     }
 
     private fun showNotification(context: Context) {
