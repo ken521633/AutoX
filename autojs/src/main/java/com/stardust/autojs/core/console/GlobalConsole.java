@@ -18,12 +18,12 @@ import java.util.Locale;
 
 public class GlobalConsole extends ConsoleImpl {
     public static WsManager LOG_WS_MANAGER = null;
-    public static String IP_DEFAUT = "boot-stg-api.huiliu365.cn";
-    //public static String IP_DEFAUT = "data-boot-api.huiliu365.com";
-    //public static String IP_DEFAUT = "ws-api.tecad.cn";
+    public static String IP_DEFAUT = "boot-stg-api.huiliu365.cn/jeecg-boot/websocket/";
+    //public static String IP_DEFAUT = "data-boot-api.huiliu365.com/jeecg-boot/websocket/";
+    //public static String IP_DEFAUT = "ws-api.tecad.cn/jeecg-boot/websocket/";
 
     public static String DEVICE_ID = "";
-    public static String TO_WHO = "/jeecg-boot/websocket/110_";
+    public static String TO_WHO = "110_";
     public static String TO_LOG = "_log";
     public static String TO_BIZ = "_biz";
 

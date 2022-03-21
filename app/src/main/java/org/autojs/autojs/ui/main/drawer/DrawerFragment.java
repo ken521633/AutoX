@@ -321,6 +321,7 @@ public class DrawerFragment extends androidx.fragment.app.Fragment {
     }
 
     void connectOrDisconnectToWS(DrawerMenuItemViewHolder holder) {
+        String host = Pref.getServerAddressOrDefault(WifiTool.getRouterIp(getActivity()));
         WS_CHECKED = holder.getSwitchCompat().isChecked();
         boolean connected = false;
         if(WSBiz.BIZ_WS!=null){
@@ -338,7 +339,7 @@ public class DrawerFragment extends androidx.fragment.app.Fragment {
                                 .retryOnConnectionFailure(true)
                                 .build())
                         .needReconnect(true)
-                        .wsUrl("ws://"+GlobalConsole.IP_DEFAUT+GlobalConsole.TO_WHO+GlobalConsole.DEVICE_ID+GlobalConsole.TO_LOG)
+                        .wsUrl("ws://"+GlobalConsole.IP_DEFAUT + GlobalConsole.TO_WHO + GlobalConsole.DEVICE_ID + GlobalConsole.TO_LOG)
                         .build();
                 //开启 连接
                 GlobalConsole.LOG_WS_MANAGER.startConnect();
@@ -358,10 +359,19 @@ public class DrawerFragment extends androidx.fragment.app.Fragment {
 
     private void inputWSHost() {
         String host = Pref.getServerAddressOrDefault(WifiTool.getRouterIp(getActivity()));
+
         new MaterialDialog.Builder(getActivity())
                 .title(R.string.text_server_address)
                 .input("", host, (dialog, input) -> {
                     Pref.saveServerAddress(input.toString());
+                    //RPA boot-stg-api.huiliu365.cn/jeecg-boot/websocket/
+                    if(input.toString().contains(" ")){
+                        //含有空格
+                        String[] myWS = input.toString().split(" ");
+                        GlobalConsole.TO_WHO = myWS[0];
+                        GlobalConsole.IP_DEFAUT = myWS[1];
+                    }
+
                     WSBiz.BIZ_WS = new WSBiz.Builder(GlobalAppContext.get()).client(
                             new OkHttpClient().newBuilder()
                                     .pingInterval(15, TimeUnit.SECONDS)
