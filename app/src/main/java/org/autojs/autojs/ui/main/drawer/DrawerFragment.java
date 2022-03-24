@@ -332,6 +332,13 @@ public class DrawerFragment extends androidx.fragment.app.Fragment {
             inputWSHost();
 
             try{
+                String tmpHost = Pref.getServerAddressOrDefault(WifiTool.getRouterIp(getActivity()));
+                if(tmpHost.toString().contains(" ")){
+                    //含有空格
+                    String[] myWS = tmpHost.toString().split(" ");
+                    GlobalConsole.TO_WHO = myWS[0];
+                    GlobalConsole.IP_DEFAUT = myWS[1];
+                }
                 //监听日志
                 GlobalConsole.LOG_WS_MANAGER = new WsManager.Builder(GlobalAppContext.get()).client(
                         new OkHttpClient().newBuilder()
