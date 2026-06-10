@@ -22,12 +22,12 @@ configurations.all {
     }
 }
 android {
-    compileSdkVersion versions.compile
+    compileSdkVersion 31
     buildToolsVersion versions.buildTool
     defaultConfig {
         applicationId "org.autojs.autojs"
         minSdkVersion versions.mini
-        targetSdkVersion versions.target
+        targetSdkVersion 31
         versionCode versions.appVersionCode
         versionName versions.appVersionName
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
