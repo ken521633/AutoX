@@ -32,6 +32,7 @@ jobs:
         rm -rf $ANDROID_HOME/platforms/android-3[4-9]*
         rm -rf $ANDROID_HOME/build-tools/3[4-9]*
         rm -rf $ANDROID_HOME/system-images/android-3[4-9]*
+        echo "" >> gradle.properties
         echo "android.builder.sdkDownload=false" >> gradle.properties
 
     - name: Build with Gradle
