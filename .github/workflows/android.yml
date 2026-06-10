@@ -7,7 +7,9 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    # 🌟 绝杀：不用最新系统了！强行指定使用 2020 年的 Ubuntu 服务器环境
+    # 完美契合老版本 Gradle，彻底告别所有因为 SDK 太新导致的解析崩溃！
+    runs-on: ubuntu-20.04
 
     steps:
     - name: Checkout Code
@@ -25,14 +27,7 @@ jobs:
     - name: Grant execute permission for gradlew
       run: chmod +x gradlew
 
-    # 👑 终极拔网线大法：提前下好依赖，严禁老古董去云端扫盲！
-    - name: Pre-install SDK 29 & Disable Gradle Cloud Download
-      run: |
-        # 1. 用新版命令行工具提前下好 SDK 29 和 30（新版工具认识 35x，绝对不崩）
-        yes | sdkmanager "platforms;android-29" "build-tools;29.0.3" "platforms;android-30" "build-tools;30.0.3"
-        # 2. 强行给项目喂一颗定心丸：禁止自动下载 SDK，闭上眼睛直接打包！
-        echo "android.builder.sdkDownload=false" >> gradle.properties
-
+    # 没有任何花里胡哨的删除、断网操作，直接老机器跑老代码！
     - name: Build with Gradle
       run: ./gradlew :app:assembleRelease --no-daemon
 
