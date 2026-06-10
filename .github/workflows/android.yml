@@ -25,21 +25,21 @@ jobs:
     - name: Grant execute permission for gradlew
       run: chmod +x gradlew
 
-    # 👑 关键新增：用绝对路径唤醒 sdkmanager，提前把目标 SDK 29 塞进本地！
-    - name: Pre-install SDK 29
+    # 👑 对症下药 1：精确补齐它死活要找的 29.0.2 版本
+    - name: Pre-install Exact SDKs
       run: |
-        yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager "platforms;android-29" "build-tools;29.0.3"
+        yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager "platforms;android-29" "build-tools;29.0.2" "build-tools;29.0.3" "platforms;android-30" "build-tools;30.0.3"
 
-    # 物理扫荡未来版本 SDK + 强行断网，杜绝一切解析崩溃
+    # 👑 对症下药 2：扩大扫荡范围！把 31 到 39 的所有未来版本全删了，彻底干掉 base-extension 报错！
     - name: Nuke Future SDKs & Disable Cloud Download
       run: |
-        rm -rf $ANDROID_HOME/platforms/android-3[4-9]*
-        rm -rf $ANDROID_HOME/build-tools/3[4-9]*
-        rm -rf $ANDROID_HOME/system-images/android-3[4-9]*
+        rm -rf $ANDROID_HOME/platforms/android-3[1-9]*
+        rm -rf $ANDROID_HOME/build-tools/3[1-9]*
+        rm -rf $ANDROID_HOME/system-images/*
         echo "" >> gradle.properties
         echo "android.builder.sdkDownload=false" >> gradle.properties
 
-    # 注入上帝级全局脚本，强行指定官方仓库，防拦截
+    # 注入全局仓库脚本，专治国内镜像拦截和 404
     - name: Inject God Mode Repositories
       run: |
         cat <<EOF > init.gradle
@@ -53,7 +53,7 @@ jobs:
         }
         EOF
 
-    # 挂载上帝脚本，精准屏蔽掉所有渠道的 Lint 扫描，一针见血去打包！
+    # 挂载脚本，跳过一切无用扫描，直接合成 Release 正式包！
     - name: Build with Gradle
       run: ./gradlew --init-script init.gradle :app:assembleRelease -x lint -x lintVitalDevRelease -x lintVitalMarketRelease -x lintVitalCommonRelease --no-daemon
 
