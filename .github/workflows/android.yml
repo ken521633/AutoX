@@ -36,16 +36,21 @@ jobs:
         echo "" >> gradle.properties
         echo "android.builder.sdkDownload=false" >> gradle.properties
 
-    # 👑 杀手锏 1：腾讯云 + 阿里云 + Bintray 官方遗迹，打造永远不会 502 的无敌镜像矩阵！
+    # 👑 终极镜像矩阵：加入阿里专属 JCenter 遗迹库 + 华为云全量快照库！
     - name: Inject God Mode Substitution Strategy
       run: |
         cat <<EOF > init.gradle
         allprojects {
             repositories {
+                // 🚨 核心救命稻草：阿里云专为 JCenter 关停保留的绝版快照库！
+                maven { url 'https://maven.aliyun.com/repository/jcenter' }
+                // 🚨 备用神库：华为云的超级 Maven 备份节点
+                maven { url 'https://repo.huaweicloud.com/repository/maven/' }
+                
+                // 常规的现代公共库
                 maven { url 'https://mirrors.tencent.com/nexus/repository/maven-public/' }
                 maven { url 'https://maven.aliyun.com/repository/public' }
                 maven { url 'https://maven.aliyun.com/repository/google' }
-                maven { url 'https://jcenter.bintray.com' }
                 maven { url 'https://jitpack.io' }
                 mavenCentral()
                 google()
@@ -63,7 +68,6 @@ jobs:
         }
         EOF
 
-    # 👑 杀手锏 2：加上 --refresh-dependencies，强行粉碎所有网络超时假报错，重新强制下载！
     - name: Build with Gradle
       run: ./gradlew --init-script init.gradle :app:assembleRelease -x lint -x lintVitalDevRelease -x lintVitalMarketRelease -x lintVitalCommonRelease --no-daemon --refresh-dependencies
 
