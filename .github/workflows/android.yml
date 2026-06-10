@@ -25,15 +25,14 @@ jobs:
     - name: Grant execute permission for gradlew
       run: chmod +x gradlew
 
-    # 👑 绝杀一：强行删掉服务器上太新的 SDK，防止老版本 Gradle 触发 35x 强转崩溃
-    - name: Remove Android 35 SDKs to fix NumberFormatException
+    # 👑 终极拔网线大法：提前下好依赖，严禁老古董去云端扫盲！
+    - name: Pre-install SDK 29 & Disable Gradle Cloud Download
       run: |
-        rm -rf $ANDROID_HOME/platforms/android-35
-        rm -rf $ANDROID_HOME/build-tools/35.*
-        rm -rf $ANDROID_HOME/system-images/android-35
-        rm -rf $ANDROID_HOME/system-images/android-34
+        # 1. 用新版命令行工具提前下好 SDK 29 和 30（新版工具认识 35x，绝对不崩）
+        yes | sdkmanager "platforms;android-29" "build-tools;29.0.3" "platforms;android-30" "build-tools;30.0.3"
+        # 2. 强行给项目喂一颗定心丸：禁止自动下载 SDK，闭上眼睛直接打包！
+        echo "android.builder.sdkDownload=false" >> gradle.properties
 
-    # 👑 绝杀二：加上 -x 参数，强行跳过所有 Lint 扫描任务，直奔打包！
     - name: Build with Gradle
       run: ./gradlew :app:assembleRelease --no-daemon
 
