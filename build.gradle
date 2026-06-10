@@ -33,3 +33,18 @@ task clean(type: Delete) {
 ext {
     versions = new JsonSlurper().parse(file('./project-versions.json'))
 }
+
+// 强行给所有子模块注入统一的 SDK 编译版本，彻底屏蔽脏变量
+subprojects {
+    afterEvaluate { project ->
+        if (project.hasProperty("android")) {
+            android {
+                compileSdkVersion 31
+                buildToolsVersion "30.0.3"
+                defaultConfig {
+                    targetSdkVersion 31
+                }
+            }
+        }
+    }
+}
