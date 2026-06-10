@@ -23,13 +23,13 @@ configurations.all {
 }
 android {
     compileSdkVersion 31
-    buildToolsVersion versions.buildTool
+    buildToolsVersion "30.0.3"
     defaultConfig {
         applicationId "org.autojs.autojs"
-        minSdkVersion versions.mini
+        minSdkVersion 24
         targetSdkVersion 31
-        versionCode versions.appVersionCode
-        versionName versions.appVersionName
+        versionCode 50709
+        versionName "5.7.9"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         multiDexEnabled true
         buildConfigField "boolean","isMarket","false"
