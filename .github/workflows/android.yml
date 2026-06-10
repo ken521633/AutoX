@@ -1,10 +1,7 @@
 name: Android CI
 
-# 触发条件：当你往 5.7.9 分支 push 代码，或者你在网页上点手动运行
 on:
   push:
-    branches: [ "5.7.9" ]
-  pull_request:
     branches: [ "5.7.9" ]
   workflow_dispatch:
 
@@ -13,13 +10,13 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    # 1. 使用最新的 v4 核心插件拉取代码
-    - name: Checkout Code
-      uses: actions/checkout@v4
-      with:
-        submodules: 'recursive' # 确保把可能存在的子模块也顺便拉下来
-
-    # 2. 锁定并配置 Java 环境
+    # 🌟 核心绝杀：直接让 GitHub 去克隆官方 wilinz 纯净、无污染的 5.7.9 分支源码！
+    # 彻底绕过你现在这个仓库里被改烂的、带双冒号的垃圾配置文件！
+    - name: Clone Official Pure AutoXjs 5.7.9
+      run: |
+        git clone --branch 5.7.9 https://github.com/wilinz/AutoXjs.git .
+        
+    # 2. 配置标准 Java 环境
     - name: set up JDK 11
       uses: actions/setup-java@v4
       with:
@@ -31,13 +28,19 @@ jobs:
     - name: Grant execute permission for gradlew
       run: chmod +x gradlew
 
-    # 4. 执行老版本编译最稳的命令
+    # 4. 彻底移除官方源码里可能残留的阿里云镜像，全部走云端光速官方源
+    - name: Clean Repositories Config
+      run: |
+        sed -i 's/maven.*aliyun.*/ /g' build.gradle
+        sed -i 's/maven.*120.25.*/ /g' build.gradle
+
+    # 5. 执行官方标准无错打包
     - name: Build with Gradle
       run: ./gradlew :app:assembleRelease --no-daemon
 
-    # 5. 上传最终生成的 5.7.9 绿色版 APK
+    # 6. 提取并上传最终编译出来的 5.7.9 绿色版 APK
     - name: Upload APK
       uses: actions/upload-artifact@v4
       with:
-        name: AutoX-v5.7.9-Release
+        name: AutoX-v5.7.9-Official-Pure-Release
         path: app/build/outputs/apk/release/*.apk
