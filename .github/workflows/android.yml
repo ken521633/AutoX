@@ -7,9 +7,8 @@ on:
 
 jobs:
   build:
-    # 🌟 绝杀：不用最新系统了！强行指定使用 2020 年的 Ubuntu 服务器环境
-    # 完美契合老版本 Gradle，彻底告别所有因为 SDK 太新导致的解析崩溃！
-    runs-on: ubuntu-20.04
+    # 🌟 用稳定且存在的 22.04 服务器！
+    runs-on: ubuntu-22.04
 
     steps:
     - name: Checkout Code
@@ -27,7 +26,14 @@ jobs:
     - name: Grant execute permission for gradlew
       run: chmod +x gradlew
 
-    # 没有任何花里胡哨的删除、断网操作，直接老机器跑老代码！
+    # 👑 终极物理扫荡 + 拔网线：用通配符把 34、35 甚至以后的 SDK 全灭了，再禁止联网！
+    - name: Nuke Future SDKs & Disable Cloud Download
+      run: |
+        rm -rf $ANDROID_HOME/platforms/android-3[4-9]*
+        rm -rf $ANDROID_HOME/build-tools/3[4-9]*
+        rm -rf $ANDROID_HOME/system-images/android-3[4-9]*
+        echo "android.builder.sdkDownload=false" >> gradle.properties
+
     - name: Build with Gradle
       run: ./gradlew :app:assembleRelease --no-daemon
 
