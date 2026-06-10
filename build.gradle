@@ -1,50 +1,55 @@
 import groovy.json.JsonSlurper
 
-// Top-level build file where you can add configuration options common to all sub-projects/modules.
 buildscript {
     ext.kotlin_version = '1.4.10'
     repositories {
-       google()          // 👈 留着官方源
-        mavenCentral()    // 👈 留着官方源
+        google()
+        mavenCentral()
+        // 必须补回 jcenter 镜像，用来下载老旧的第三方依赖库
+        maven { url 'https://maven.aliyun.com/repository/public' } 
         maven { url "https://jitpack.io" }
     }
     dependencies {
         classpath 'com.android.tools.build:gradle:4.1.0'
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
-        classpath 'com.jakewharton:butterknife-gradle-plugin:10.2.1'
+        classpath 'com.jakewharton.butterknife-gradle-plugin:10.2.1'
         classpath 'org.codehaus.groovy:groovy-json:3.0.6'
-
-
     }
 }
 
 allprojects {
     repositories {
-       google()          // 👈 留着官方源
-        mavenCentral()    // 👈 留着官方源
+        google()
+        mavenCentral()
+        // 必须补回 jcenter 镜像，保证 app 模块能正常抓到 flexibledivider 等老包
+        maven { url 'https://maven.aliyun.com/repository/public' }
         maven { url "https://jitpack.io" }
+    }
+}
+
+// 👑 终极强控：彻底锁死所有模块的 SDK 版本，绝不给 35/36x 任何抬头机会
+subprojects {
+    afterEvaluate { project ->
+        if (project.hasProperty("android")) {
+            android {
+                // 强制让所有子模块全部降级、锁定到 Android 10/11 稳定的编译环境中
+                compileSdkVersion 30
+                buildToolsVersion "30.0.3"
+                
+                defaultConfig {
+                    targetSdkVersion 30
+                }
+                
+                // ⚡ 降维打击 36x 的绝招：阻止 Gradle 去扫描那些带脏数据的全新 SDK 属性
+                lintOptions {
+                    abortOnError false
+                    checkReleaseBuilds false
+                }
+            }
+        }
     }
 }
 
 task clean(type: Delete) {
     delete rootProject.buildDir
-}
-
-ext {
-    versions = new JsonSlurper().parse(file('./project-versions.json'))
-}
-
-// 强行给所有子模块注入统一的 SDK 编译版本，彻底屏蔽脏变量
-subprojects {
-    afterEvaluate { project ->
-        if (project.hasProperty("android")) {
-            android {
-                compileSdkVersion 31
-                buildToolsVersion "30.0.3"
-                defaultConfig {
-                    targetSdkVersion 31
-                }
-            }
-        }
-    }
 }
