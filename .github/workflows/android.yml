@@ -25,7 +25,12 @@ jobs:
     - name: Grant execute permission for gradlew
       run: chmod +x gradlew
 
-    # 1. 物理扫荡未来版本的 SDK + 强行断网，防止解析崩溃
+    # 👑 关键新增：用绝对路径唤醒 sdkmanager，提前把目标 SDK 29 塞进本地！
+    - name: Pre-install SDK 29
+      run: |
+        yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager "platforms;android-29" "build-tools;29.0.3"
+
+    # 物理扫荡未来版本 SDK + 强行断网，杜绝一切解析崩溃
     - name: Nuke Future SDKs & Disable Cloud Download
       run: |
         rm -rf $ANDROID_HOME/platforms/android-3[4-9]*
@@ -34,7 +39,7 @@ jobs:
         echo "" >> gradle.properties
         echo "android.builder.sdkDownload=false" >> gradle.properties
 
-    # 👑 2. 注入上帝级全局脚本，强行指定官方仓库，彻底防范阿里云空镜像拦截！
+    # 注入上帝级全局脚本，强行指定官方仓库，防拦截
     - name: Inject God Mode Repositories
       run: |
         cat <<EOF > init.gradle
@@ -48,7 +53,7 @@ jobs:
         }
         EOF
 
-    # 👑 3. 挂载上帝脚本，并精准屏蔽掉所有渠道的 Lint 无用扫描，直奔打包！
+    # 挂载上帝脚本，精准屏蔽掉所有渠道的 Lint 扫描，一针见血去打包！
     - name: Build with Gradle
       run: ./gradlew --init-script init.gradle :app:assembleRelease -x lint -x lintVitalDevRelease -x lintVitalMarketRelease -x lintVitalCommonRelease --no-daemon
 
