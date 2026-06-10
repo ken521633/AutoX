@@ -1,54 +1,43 @@
 name: Android CI
+
+# 触发条件：当你往 5.7.9 分支 push 代码，或者你在网页上点手动运行
 on:
   push:
-    tags:
-      - '*'
+    branches: [ "5.7.9" ]
+  pull_request:
+    branches: [ "5.7.9" ]
+  workflow_dispatch:
+
 jobs:
   build:
     runs-on: ubuntu-latest
+
     steps:
-      - name: checkout
-        id: check
-        uses: actions/checkout@v1
-      - name: set up JDK 1.8
-        uses: actions/setup-java@v1
-        with:
-          java-version: 1.8
-      - name: Build with Gradle
-        run: |
-          chmod 777 ./gradlew
-          ./gradlew inrt:assembleRelease
-          ls
-      - uses: Tlaster/android-sign@v1.2.2
-        name: Sign inrt APK
-        with:
-          releaseDirectory: |
-            inrt/build/outputs/apk/common/release
-          signingKeyBase64: ${{ secrets.ISIGNING_KEY }}
-          output: build/inrt/signed
-          alias: ${{ secrets.IALIAS }}
-          keyStorePassword: ${{ secrets.IKEY_STORE_PASSWORD }}
-          keyPassword: ${{ secrets.IKEY_PASSWORD }}
-      - name: shell
-        run: |
-          ls  build/inrt/signed
-          pwd
-          mv  build/inrt/signed/*.apk  app/src/main/assets/template.apk
-          ls  app/src/main/assets
-          ./gradlew app:assembleRelease
-           ls
-      - uses: Tlaster/android-sign@v1.2.2
-        name: Sign app APK
-        with:
-          releaseDirectory: |
-            app/build/outputs/apk/common/release
-          signingKeyBase64: ${{ secrets.ASIGNING_KEY }}
-          output: build/app/signed
-          alias: ${{ secrets.AALIAS }}
-          keyStorePassword: ${{ secrets.AKEY_STORE_PASSWORD }}
-          keyPassword: ${{ secrets.AKEY_PASSWORD }}
-      - name: upload apk
-        uses: actions/upload-artifact@master
-        with:
-          name: autoxjs.apk
-          path: build/app/signed
+    # 1. 使用最新的 v4 核心插件拉取代码
+    - name: Checkout Code
+      uses: actions/checkout@v4
+      with:
+        submodules: 'recursive' # 确保把可能存在的子模块也顺便拉下来
+
+    # 2. 锁定并配置 Java 环境
+    - name: set up JDK 11
+      uses: actions/setup-java@v4
+      with:
+        java-version: '11'
+        distribution: 'temurin'
+        cache: gradle
+
+    # 3. 赋予执行权限
+    - name: Grant execute permission for gradlew
+      run: chmod +x gradlew
+
+    # 4. 执行老版本编译最稳的命令
+    - name: Build with Gradle
+      run: ./gradlew :app:assembleRelease --no-daemon
+
+    # 5. 上传最终生成的 5.7.9 绿色版 APK
+    - name: Upload APK
+      uses: actions/upload-artifact@v4
+      with:
+        name: AutoX-v5.7.9-Release
+        path: app/build/outputs/apk/release/*.apk
