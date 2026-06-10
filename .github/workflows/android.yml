@@ -35,7 +35,7 @@ jobs:
 
     # 👑 绝杀二：加上 -x 参数，强行跳过所有 Lint 扫描任务，直奔打包！
     - name: Build with Gradle
-      run: ./gradlew :app:assembleRelease -x lint -x lintVitalRelease -x lintVitalDevRelease --no-daemon
+      run: ./gradlew :app:assembleRelease --no-daemon
 
     - name: Upload APK
       uses: actions/upload-artifact@v4
