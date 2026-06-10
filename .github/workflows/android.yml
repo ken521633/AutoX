@@ -36,34 +36,53 @@ jobs:
         echo "" >> gradle.properties
         echo "android.builder.sdkDownload=false" >> gradle.properties
 
-    # 👑 终极镜像矩阵：加入阿里专属 JCenter 遗迹库 + 华为云全量快照库！
-    - name: Inject God Mode Substitution Strategy
+    # 👑 绝对杀手锏：直接抓取原作者 GitHub Release 的绝版安装包，在本地直接捏造一个 Maven 仓库！
+    - name: Rescue Extinct Dependencies (Fake Local Maven Repo)
+      run: |
+        # 1. 建立 RootShell 1.6 专属本地避难所
+        mkdir -p local_repo/com/github/Stericson/RootShell/1.6/
+        curl -L -s -o local_repo/com/github/Stericson/RootShell/1.6/RootShell-1.6.aar https://github.com/Stericson/RootShell/releases/download/1.6/RootShell.aar
+        cat <<EOF > local_repo/com/github/Stericson/RootShell/1.6/RootShell-1.6.pom
+        <project>
+          <modelVersion>4.0.0</modelVersion>
+          <groupId>com.github.Stericson</groupId>
+          <artifactId>RootShell</artifactId>
+          <version>1.6</version>
+          <packaging>aar</packaging>
+        </project>
+        EOF
+        
+        # 2. 建立 RootTools 5.0 专属本地避难所
+        mkdir -p local_repo/com/github/Stericson/RootTools/5.0/
+        curl -L -s -o local_repo/com/github/Stericson/RootTools/5.0/RootTools-5.0.aar https://github.com/Stericson/RootTools/releases/download/5.0/RootTools.aar
+        cat <<EOF > local_repo/com/github/Stericson/RootTools/5.0/RootTools-5.0.pom
+        <project>
+          <modelVersion>4.0.0</modelVersion>
+          <groupId>com.github.Stericson</groupId>
+          <artifactId>RootTools</artifactId>
+          <version>5.0</version>
+          <packaging>aar</packaging>
+        </project>
+        EOF
+
+    # 👑 撤销上一把错误的替换策略，强制最高优先级指向我们刚才捏造的本地仓库！
+    - name: Inject God Mode Repositories
       run: |
         cat <<EOF > init.gradle
         allprojects {
             repositories {
-                // 🚨 核心救命稻草：阿里云专为 JCenter 关停保留的绝版快照库！
-                maven { url 'https://maven.aliyun.com/repository/jcenter' }
-                // 🚨 备用神库：华为云的超级 Maven 备份节点
-                maven { url 'https://repo.huaweicloud.com/repository/maven/' }
+                // 🚨 最高优先级：让 Gradle 以为这是一个正规仓库，直接进去拿我们下好的绝版包！
+                maven { url uri("$(pwd)/local_repo") }
                 
-                // 常规的现代公共库
+                // 保留其他无敌镜像供别的组件使用
+                maven { url 'https://maven.aliyun.com/repository/jcenter' }
+                maven { url 'https://repo.huaweicloud.com/repository/maven/' }
                 maven { url 'https://mirrors.tencent.com/nexus/repository/maven-public/' }
                 maven { url 'https://maven.aliyun.com/repository/public' }
                 maven { url 'https://maven.aliyun.com/repository/google' }
                 maven { url 'https://jitpack.io' }
                 mavenCentral()
                 google()
-            }
-            configurations.all {
-                resolutionStrategy.eachDependency { DependencyResolveDetails details ->
-                    if (details.requested.group == 'com.github.Stericson' && details.requested.name == 'RootShell') {
-                        details.useVersion '89c3b49401'
-                    }
-                    if (details.requested.group == 'com.github.Stericson' && details.requested.name == 'RootTools') {
-                        details.useVersion '10fd55fb6d'
-                    }
-                }
             }
         }
         EOF
