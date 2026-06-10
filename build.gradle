@@ -1,18 +1,22 @@
 import groovy.json.JsonSlurper
 
+// 1. 恢复原厂的 JSON 变量读取逻辑，保证所有模块的 versions 变量恢复正常！
+def versionFile = file('project-versions.json')
+def json = new JsonSlurper().parseText(versionFile.text)
+ext.versions = json
+
 buildscript {
     ext.kotlin_version = '1.4.10'
     repositories {
         google()
         mavenCentral()
-        // 必须补回 jcenter 镜像，用来下载老旧的第三方依赖库
         maven { url 'https://maven.aliyun.com/repository/public' } 
         maven { url "https://jitpack.io" }
     }
     dependencies {
         classpath 'com.android.tools.build:gradle:4.1.0'
-        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:1.4.10"
-//        classpath 'com.jakewharton.butterknife-gradle-plugin:10.2.3'
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
+        classpath 'com.jakewharton.butterknife-gradle-plugin:10.2.1'
         classpath 'org.codehaus.groovy:groovy-json:3.0.6'
     }
 }
@@ -21,35 +25,12 @@ allprojects {
     repositories {
         google()
         mavenCentral()
-        // 必须补回 jcenter 镜像，保证 app 模块能正常抓到 flexibledivider 等老包
         maven { url 'https://maven.aliyun.com/repository/public' }
         maven { url "https://jitpack.io" }
     }
 }
 
-// 👑 终极强控：彻底锁死所有模块的 SDK 版本，绝不给 35/36x 任何抬头机会
-subprojects {
-    afterEvaluate { project ->
-        if (project.hasProperty("android")) {
-            android {
-                // 强制让所有子模块全部降级、锁定到 Android 10/11 稳定的编译环境中
-                compileSdkVersion 30
-                buildToolsVersion "30.0.3"
-                
-                defaultConfig {
-                    targetSdkVersion 30
-                }
-                
-                // ⚡ 降维打击 36x 的绝招：阻止 Gradle 去扫描那些带脏数据的全新 SDK 属性
-                lintOptions {
-                    abortOnError false
-                    checkReleaseBuilds false
-                }
-            }
-        }
-    }
-}
-
+// 2. 彻底移除我们之前加的 subprojects 强控（因为它会打乱原本的变量结构），让一切回归原厂！
 task clean(type: Delete) {
     delete rootProject.buildDir
 }
