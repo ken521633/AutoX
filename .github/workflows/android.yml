@@ -15,7 +15,6 @@ jobs:
       with:
         submodules: 'recursive'
 
-    # 不再使用有缓存的 Java 环境，彻底清空之前的 404 失败记录！
     - name: set up JDK 11
       uses: actions/setup-java@v4
       with:
@@ -37,13 +36,16 @@ jobs:
         echo "" >> gradle.properties
         echo "android.builder.sdkDownload=false" >> gradle.properties
 
-    # 👑 偷梁换柱大法：拦截 Gradle，将绝版的 1.6 强行替换为开源社区验证过绝对可用的哈希版本！
+    # 👑 杀手锏 1：腾讯云 + 阿里云 + Bintray 官方遗迹，打造永远不会 502 的无敌镜像矩阵！
     - name: Inject God Mode Substitution Strategy
       run: |
         cat <<EOF > init.gradle
         allprojects {
             repositories {
-                maven { url 'https://maven.aliyun.com/repository/jcenter' }
+                maven { url 'https://mirrors.tencent.com/nexus/repository/maven-public/' }
+                maven { url 'https://maven.aliyun.com/repository/public' }
+                maven { url 'https://maven.aliyun.com/repository/google' }
+                maven { url 'https://jcenter.bintray.com' }
                 maven { url 'https://jitpack.io' }
                 mavenCentral()
                 google()
@@ -53,7 +55,6 @@ jobs:
                     if (details.requested.group == 'com.github.Stericson' && details.requested.name == 'RootShell') {
                         details.useVersion '89c3b49401'
                     }
-                    // 顺手把 RootTools 也防范性替换掉，防止它俩连环报错！
                     if (details.requested.group == 'com.github.Stericson' && details.requested.name == 'RootTools') {
                         details.useVersion '10fd55fb6d'
                     }
@@ -62,8 +63,9 @@ jobs:
         }
         EOF
 
+    # 👑 杀手锏 2：加上 --refresh-dependencies，强行粉碎所有网络超时假报错，重新强制下载！
     - name: Build with Gradle
-      run: ./gradlew --init-script init.gradle :app:assembleRelease -x lint -x lintVitalDevRelease -x lintVitalMarketRelease -x lintVitalCommonRelease --no-daemon
+      run: ./gradlew --init-script init.gradle :app:assembleRelease -x lint -x lintVitalDevRelease -x lintVitalMarketRelease -x lintVitalCommonRelease --no-daemon --refresh-dependencies
 
     - name: Upload APK
       uses: actions/upload-artifact@v4
