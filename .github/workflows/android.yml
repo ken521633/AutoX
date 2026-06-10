@@ -36,10 +36,8 @@ jobs:
         echo "" >> gradle.properties
         echo "android.builder.sdkDownload=false" >> gradle.properties
 
-    # 👑 绝对杀手锏：直接抓取原作者 GitHub Release 的绝版安装包，在本地直接捏造一个 Maven 仓库！
     - name: Rescue Extinct Dependencies (Fake Local Maven Repo)
       run: |
-        # 1. 建立 RootShell 1.6 专属本地避难所
         mkdir -p local_repo/com/github/Stericson/RootShell/1.6/
         curl -L -s -o local_repo/com/github/Stericson/RootShell/1.6/RootShell-1.6.aar https://github.com/Stericson/RootShell/releases/download/1.6/RootShell.aar
         cat <<EOF > local_repo/com/github/Stericson/RootShell/1.6/RootShell-1.6.pom
@@ -52,7 +50,6 @@ jobs:
         </project>
         EOF
         
-        # 2. 建立 RootTools 5.0 专属本地避难所
         mkdir -p local_repo/com/github/Stericson/RootTools/5.0/
         curl -L -s -o local_repo/com/github/Stericson/RootTools/5.0/RootTools-5.0.aar https://github.com/Stericson/RootTools/releases/download/5.0/RootTools.aar
         cat <<EOF > local_repo/com/github/Stericson/RootTools/5.0/RootTools-5.0.pom
@@ -65,24 +62,28 @@ jobs:
         </project>
         EOF
 
-    # 👑 撤销上一把错误的替换策略，强制最高优先级指向我们刚才捏造的本地仓库！
+    # 👑 重新排兵布阵：稳库顶上，宕机库垫底！
     - name: Inject God Mode Repositories
       run: |
         cat <<EOF > init.gradle
         allprojects {
             repositories {
-                // 🚨 最高优先级：让 Gradle 以为这是一个正规仓库，直接进去拿我们下好的绝版包！
-                maven { url uri("$(pwd)/local_repo") }
+                // 1. 我们捏造的绝版避难所永远第一
+                maven { url uri("\$(pwd)/local_repo") }
                 
-                // 保留其他无敌镜像供别的组件使用
-                maven { url 'https://maven.aliyun.com/repository/jcenter' }
-                maven { url 'https://repo.huaweicloud.com/repository/maven/' }
+                // 2. 官方绝对稳定、绝对不会 502 的大库放前面！让 Glide 从这里秒下！
+                google()
+                mavenCentral()
+                maven { url 'https://jitpack.io' }
+                
+                // 3. 常规国内镜像放中间
                 maven { url 'https://mirrors.tencent.com/nexus/repository/maven-public/' }
                 maven { url 'https://maven.aliyun.com/repository/public' }
                 maven { url 'https://maven.aliyun.com/repository/google' }
-                maven { url 'https://jitpack.io' }
-                mavenCentral()
-                google()
+                maven { url 'https://repo.huaweicloud.com/repository/maven/' }
+                
+                // 4. 🚨 容易 502 抽风的阿里云 JCenter 遗迹库扔到最后！只让它处理走投无路的包！
+                maven { url 'https://maven.aliyun.com/repository/jcenter' }
             }
         }
         EOF
