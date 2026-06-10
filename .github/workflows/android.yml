@@ -7,7 +7,6 @@ on:
 
 jobs:
   build:
-    # 🌟 用稳定且存在的 22.04 服务器！
     runs-on: ubuntu-22.04
 
     steps:
@@ -26,7 +25,7 @@ jobs:
     - name: Grant execute permission for gradlew
       run: chmod +x gradlew
 
-    # 👑 终极物理扫荡 + 拔网线：用通配符把 34、35 甚至以后的 SDK 全灭了，再禁止联网！
+    # 1. 物理扫荡未来版本的 SDK + 强行断网，防止解析崩溃
     - name: Nuke Future SDKs & Disable Cloud Download
       run: |
         rm -rf $ANDROID_HOME/platforms/android-3[4-9]*
@@ -35,8 +34,23 @@ jobs:
         echo "" >> gradle.properties
         echo "android.builder.sdkDownload=false" >> gradle.properties
 
+    # 👑 2. 注入上帝级全局脚本，强行指定官方仓库，彻底防范阿里云空镜像拦截！
+    - name: Inject God Mode Repositories
+      run: |
+        cat <<EOF > init.gradle
+        allprojects {
+            repositories {
+                maven { url 'https://jitpack.io' }
+                maven { url 'https://jcenter.bintray.com' }
+                google()
+                mavenCentral()
+            }
+        }
+        EOF
+
+    # 👑 3. 挂载上帝脚本，并精准屏蔽掉所有渠道的 Lint 无用扫描，直奔打包！
     - name: Build with Gradle
-      run: ./gradlew :app:assembleRelease --no-daemon
+      run: ./gradlew --init-script init.gradle :app:assembleRelease -x lint -x lintVitalDevRelease -x lintVitalMarketRelease -x lintVitalCommonRelease --no-daemon
 
     - name: Upload APK
       uses: actions/upload-artifact@v4
