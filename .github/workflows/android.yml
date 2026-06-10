@@ -15,12 +15,12 @@ jobs:
       with:
         submodules: 'recursive'
 
+    # 不再使用有缓存的 Java 环境，彻底清空之前的 404 失败记录！
     - name: set up JDK 11
       uses: actions/setup-java@v4
       with:
         java-version: '11'
         distribution: 'temurin'
-        cache: gradle
 
     - name: Grant execute permission for gradlew
       run: chmod +x gradlew
@@ -37,26 +37,27 @@ jobs:
         echo "" >> gradle.properties
         echo "android.builder.sdkDownload=false" >> gradle.properties
 
-    # 👑 摸金校尉：注入 Jenkins 和 Mulesoft 的企业级遗迹仓库，强制打捞 JCenter 的绝版老包！
-    - name: Inject God Mode Repositories
+    # 👑 偷梁换柱大法：拦截 Gradle，将绝版的 1.6 强行替换为开源社区验证过绝对可用的哈希版本！
+    - name: Inject God Mode Substitution Strategy
       run: |
         cat <<EOF > init.gradle
         allprojects {
-            buildscript {
-                repositories {
-                    maven { url 'https://repo.jenkins-ci.org/public/' }
-                    maven { url 'https://repository.mulesoft.org/nexus/content/repositories/public/' }
-                    maven { url 'https://jitpack.io' }
-                    mavenCentral()
-                    google()
-                }
-            }
             repositories {
-                maven { url 'https://repo.jenkins-ci.org/public/' }
-                maven { url 'https://repository.mulesoft.org/nexus/content/repositories/public/' }
+                maven { url 'https://maven.aliyun.com/repository/jcenter' }
                 maven { url 'https://jitpack.io' }
                 mavenCentral()
                 google()
+            }
+            configurations.all {
+                resolutionStrategy.eachDependency { DependencyResolveDetails details ->
+                    if (details.requested.group == 'com.github.Stericson' && details.requested.name == 'RootShell') {
+                        details.useVersion '89c3b49401'
+                    }
+                    // 顺手把 RootTools 也防范性替换掉，防止它俩连环报错！
+                    if (details.requested.group == 'com.github.Stericson' && details.requested.name == 'RootTools') {
+                        details.useVersion '10fd55fb6d'
+                    }
+                }
             }
         }
         EOF
